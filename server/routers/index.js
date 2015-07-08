@@ -13,7 +13,7 @@ router.get('/', function(req, res) {
             });
         }
         var userManager = new UsersManager(connection);
-        userManager.findUser({ nick: 'test' }, function(err, user) {
+        userManager.findUser({ id: 1 }, function(err, user) {
             if (err) {
                 console.log(err);
                 return res.render('error/internal-error', {
@@ -22,9 +22,21 @@ router.get('/', function(req, res) {
                 });
             }
             console.log(user._curInstance, user.getNick());
+            user.beginTransaction()
+                .setNick('IPRIT4')
+                .commit(function(err, result) {
+                    if (err) {
+                        console.log(err);
+                        return res.render('error/internal-error', {
+                            message: 'An internal error occurred',
+                            error: err
+                        });
+                    }
+                    console.log(user.getNick(), user._curInstance);
+                    res.render('index/index');
+                });
         });
     });
-    res.render('index/index');
 });
 
 router.get('/index', function(req, res) {

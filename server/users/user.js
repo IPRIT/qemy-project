@@ -1,3 +1,5 @@
+var clone = require('clone');
+
 var User = function(dbConnection) {
     if (!dbConnection) {
         throw new TypeError('Connection should be not empty');
@@ -33,7 +35,7 @@ User.prototype.beginTransaction = function() {
     if (this._isTransaction) {
         return this;
     }
-    this._savedInstance = Object.clone(this._curInstance);
+    this._savedInstance = clone(this._curInstance);
     this._tempInstance = {};
     this._isTransaction = true;
 
@@ -46,7 +48,7 @@ User.prototype.commit = function(callback) {
         return this;
     }
     this._isTransaction = false;
-    this._savedInstance = Object.clone(this._curInstance);
+    this._savedInstance = clone(this._curInstance);
     this._save(callback);
 
     return this;
@@ -57,7 +59,7 @@ User.prototype.rollback = function() {
     if (!this._isTransaction) {
         return this;
     }
-    this._curInstance = Object.clone(this._savedInstance);
+    this._curInstance = clone(this._savedInstance);
     this._tempInstance = {};
     this._isTransaction = false;
 
@@ -69,17 +71,18 @@ User.prototype._save = function(callback) {
     if (this.isEmpty() || this._isTransaction) {
         return;
     }
-    var changesObject = Object.clone(this._tempInstance);
+    var changesObject = clone(this._tempInstance);
     var _this = this;
     this._dbConnection.query('UPDATE users SET ? WHERE id = ?', [changesObject, this.getId()], function(err, result) {
         if (err) {
             return callback(err);
         }
+        var _result = result;
         _this._dbConnection.commit(function(err) {
             if (err) {
                 return callback(err);
             }
-            return callback(null, result);
+            return callback(null, _result);
         });
     });
 
